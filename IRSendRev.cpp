@@ -17,8 +17,9 @@
  * JVC and Panasonic protocol added by Kristian Lauszus (Thanks to zenwheel and other people at the original blog post)
  */
 
-#include "IRSendrev.h"
-#include "IRsendRevInt.h"
+
+#include "IRSendRev.h"
+#include "IRSendRevInt.h"
 
 // Provides ISR
 #include <avr/interrupt.h>
