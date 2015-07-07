@@ -282,7 +282,7 @@ unsigned char IRSendRev::IsDta()
     if(decode(&results))
     {
         int count       = results.rawlen;
-        if(count < 64 || (count -4)%8 != 0)
+        if(count < 20 || (count -4)%8 != 0)
         {
 #if __DEBUG
             Serial.print("IR GET BAD DATA!\r\n");
