@@ -44,7 +44,7 @@
 #elif defined(__AVR_ATmega32U4__)
 //#define IR_USE_TIMER1   	// tx = pin 14
 //#define IR_USE_TIMER3   	// tx = pin 9
-  #define IR_USE_TIMER4_HS  // tx = pin 10
+  #define IR_USE_TIMER4_HS  // tx = pin 10                   /* pin 13 on leonardo board   */
 
 // Teensy++ 1.0 & 2.0
 #elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
@@ -267,6 +267,8 @@ extern volatile irparams_t irparams;
 })
 #if defined(CORE_OC4A_PIN)
 #define TIMER_PWM_PIN        CORE_OC4A_PIN                              /* Teensy                       */
+#elif defined(__AVR_ATmega32U4__)
+#define TIMER_PWM_PIN        10                                         /* pin D13 on leonardo board    */
 #else
 #error "Please add OC4A pin number here\n"
 #endif
