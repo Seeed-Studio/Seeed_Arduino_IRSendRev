@@ -1,4 +1,4 @@
-IR Send and Receive
+IR Send and Receive  [![Build Status](https://travis-ci.com/Seeed-Studio/IRSendRev.svg?branch=master)](https://travis-ci.com/Seeed-Studio/IRSendRev)
 ---------------------------------------------------------
 
 
