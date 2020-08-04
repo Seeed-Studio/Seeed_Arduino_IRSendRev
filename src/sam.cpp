@@ -15,10 +15,11 @@
 
 // following based on setup from GitHub jdneo/timerInterrupt.ino
 
-static void setTimerFrequency(int frequencyHz) {
+static void setTimerFrequency(int frequencyHz)
+{
     int compareValue = (SYSCLOCK / (TIMER_PRESCALER_DIV * frequencyHz)) - 1;
     //Serial.println(compareValue);
-    TcCount16* TC = (TcCount16*) TC3;
+    TcCount16 *TC = (TcCount16 *)TC3;
     // Make sure the count is in a proportional position to where it was
     // to prevent any jitter or disconnect when changing the compare value.
     TC->COUNT.reg = map(TC->COUNT.reg, 0, TC->CC[0].reg, 0, compareValue);
@@ -27,32 +28,54 @@ static void setTimerFrequency(int frequencyHz) {
     //Serial.println(TC->COUNT.reg);
     //Serial.print("CC[0].reg ");
     //Serial.println(TC->CC[0].reg);
+
+#ifdef __SAMD51__
+    while (TC->SYNCBUSY.bit.ENABLE == 1)
+        ; //
+#else
     while (TC->STATUS.bit.SYNCBUSY == 1)
-        ;
+        ; // wait for sync
+#endif
 }
 
-static void startTimer() {
-    REG_GCLK_CLKCTRL = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3);
+static void startTimer()
+{
+#ifdef __SAMD51__
+    GCLK->PCHCTRL[TC3_GCLK_ID].reg = GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
+#else
+    REG_GCLK_CLKCTRL = (uint16_t)(GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3);
     while (GCLK->STATUS.bit.SYNCBUSY == 1)
         ; // wait for sync
+#endif
 
-    TcCount16* TC = (TcCount16*) TC3;
+    TcCount16 *TC = (TcCount16 *)TC3;
 
     // The TC should be disabled before the TC is reset in order to avoid undefined behavior.
     TC->CTRLA.reg &= ~TC_CTRLA_ENABLE;
-    // When write-synchronization is ongoing for a register, any subsequent write attempts to this register will be discarded, and an error will be reported.
-    while (TC->STATUS.bit.SYNCBUSY == 1); // wait for sync
+// When write-synchronization is ongoing for a register, any subsequent write attempts to this register will be discarded, and an error will be reported.
+#ifdef __SAMD51__
+    while (TC->SYNCBUSY.bit.ENABLE == 1)
+        ; //
+#else
+    while (TC->STATUS.bit.SYNCBUSY == 1)
+        ; // wait for sync
+#endif
     // Reset TCx
     TC->CTRLA.reg = TC_CTRLA_SWRST;
-    // When writing a ‘1’ to the CTRLA.SWRST bit it will immediately read as ‘1’.
+    // When writing a ï¿½1ï¿½ to the CTRLA.SWRST bit it will immediately read as ï¿½1ï¿½.
     // CTRL.SWRST will be cleared by hardware when the peripheral has been reset.
     while (TC->CTRLA.bit.SWRST)
         ;
 
-    // Use the 16-bit timer
-    // Use match mode so that the timer counter resets when the count matches the compare register
-    // Set prescaler to 64
-    TC->CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | TC_CTRLA_WAVEGEN_MFRQ | TC_CTRLA_PRESCALER_DIV64 | TC_CTRLA_ENABLE;
+// Use the 16-bit timer
+// Use match mode so that the timer counter resets when the count matches the compare register
+// Set prescaler to 64
+#ifdef __SAMD51__
+    TC->WAVE.reg = TC_WAVE_WAVEGEN_MFRQ;
+#else
+    TC->CTRLA.reg |= TC_CTRLA_WAVEGEN_MFRQ;
+#endif
+    TC->CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | TC_CTRLA_PRESCALER_DIV64 | TC_CTRLA_ENABLE;
 
     setTimerFrequency(1000000 / MICROS_PER_TICK);
 
@@ -60,15 +83,15 @@ static void startTimer() {
     TC->INTENSET.reg = 0;
     TC->INTENSET.bit.MC0 = 1;
 
-    NVIC_EnableIRQ (TC3_IRQn);
-
+    NVIC_EnableIRQ(TC3_IRQn);
 }
 
 //+=============================================================================
 // initialization
 //
 
-void IRrecv::enableIRIn() {
+void IRrecv::enableIRIn()
+{
     // Interrupt Service Routine - Fires every 50uS
     //Serial.println("Starting timer");
     startTimer();
@@ -82,17 +105,20 @@ void IRrecv::enableIRIn() {
     pinMode(irparams.recvpin, INPUT);
 }
 
-void IRrecv::disableIRIn() {
+void IRrecv::disableIRIn()
+{
     TC3->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
 }
 
 void irs(); // Defined in IRRemote as ISR(TIMER_INTR_NAME)
 
-void TC3_Handler(void) {
-    TcCount16* TC = (TcCount16*) TC3;
+void TC3_Handler(void)
+{
+    TcCount16 *TC = (TcCount16 *)TC3;
     // If this interrupt is due to the compare register matching the timer count
     // we toggle the LED.
-    if (TC->INTFLAG.bit.MC0 == 1) {
+    if (TC->INTFLAG.bit.MC0 == 1)
+    {
         TC->INTFLAG.bit.MC0 = 1;
         irs();
     }
