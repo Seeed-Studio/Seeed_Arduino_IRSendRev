@@ -31,8 +31,10 @@ void setup() {
     Serial.println(IR_SEND_PIN);
 }
 
+unsigned long tData = 0xa90;
+
 void loop() {
-    unsigned long tData = 0xa90;
+
     for (int i = 0; i < 3; i++) {
         irsend.sendSony(tData, 12);
         Serial.print(F("sendSony(0x"));
