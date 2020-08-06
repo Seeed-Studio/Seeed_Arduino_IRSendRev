@@ -90,9 +90,10 @@ void IRsend::mark(unsigned int time) {
 #else
     TIMER_ENABLE_PWM; // Enable pin 3 PWM output
 #endif
-    if (time > 0) {
-        custom_delay_usec(time);
-    }
+    // ! This is a bug, no need to delay here
+    // if (time > 0) {
+    //     custom_delay_usec(time);
+    // }
 }
 
 //+=============================================================================
