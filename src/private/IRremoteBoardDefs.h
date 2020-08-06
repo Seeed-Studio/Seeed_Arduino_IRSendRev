@@ -884,8 +884,11 @@ static void timerConfigNormal() {
 
 #elif defined(ARDUINO_ARCH_SAMD)
 // use timer 3 hardcoded at this time
-
+#ifdef WIO_TERMINAL
+#define IR_SEND_PIN WIO_IR
+#else
 #define IR_SEND_PIN 9
+#endif
 
 #define TIMER_RESET
 #define TIMER_ENABLE_PWM     // Not presently used
